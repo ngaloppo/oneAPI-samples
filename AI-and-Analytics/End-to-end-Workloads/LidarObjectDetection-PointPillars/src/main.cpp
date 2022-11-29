@@ -121,29 +121,33 @@ int main(int argc, char *argv[]) {
 
     // setup PointPillars
     pointpillars::PointPillars point_pillars(0.5f, 0.5f, config);
-    const auto start_time = std::chrono::high_resolution_clock::now();
 
-    // run PointPillars
-    try {
-      point_pillars.Detect(points.data(), number_of_points, object_detections);
-    } catch (const std::runtime_error &e) {
-      std::cout << "Exception during PointPillars execution\n";
-      std::cout << e.what() << std::endl;
-      return -1;
+    int num_iters = 5;
+    for (int i = 0; i < num_iters; ++i) {
+      const auto start_time = std::chrono::high_resolution_clock::now();
+
+      // run PointPillars
+      try {
+        point_pillars.Detect(points.data(), number_of_points, object_detections);
+      } catch (const std::runtime_error &e) {
+        std::cout << "Exception during PointPillars execution\n";
+        std::cout << e.what() << std::endl;
+        return -1;
+      }
+      const auto end_time = std::chrono::high_resolution_clock::now();
+      std::cout << "Iteration: " << i << " Execution time: "
+                << std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count() << "ms\n\n";
+
+      // print results
+      std::cout << object_detections.size() << " cars detected\n";
+
+      for (auto const &detection : object_detections) {
+        std::cout << config.classes[detection.class_id] << ": Probability = " << detection.class_probabilities[0]
+                  << " Position = (" << detection.x << ", " << detection.y << ", " << detection.z
+                  << ") Length = " << detection.length << " Width = " << detection.width << "\n";
+      }
+      std::cout << "\n\n";
     }
-    const auto end_time = std::chrono::high_resolution_clock::now();
-    std::cout << "Execution time: "
-              << std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count() << "ms\n\n";
-
-    // print results
-    std::cout << object_detections.size() << " cars detected\n";
-
-    for (auto const &detection : object_detections) {
-      std::cout << config.classes[detection.class_id] << ": Probability = " << detection.class_probabilities[0]
-                << " Position = (" << detection.x << ", " << detection.y << ", " << detection.z
-                << ") Length = " << detection.length << " Width = " << detection.width << "\n";
-    }
-    std::cout << "\n\n";
   }
 
   return 0;
